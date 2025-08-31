@@ -1,0 +1,65 @@
+getwd()
+setwd("D:/2024/Internships/AI_Omics_Internship_2025/raw_data/")
+
+
+read.csv(choose.files("D:/2024/Internships/AI_Omics_Internship_2025/raw_data/DEGs_Data_1.csv"))
+read.csv(choose.files("D:/2024/Internships/AI_Omics_Internship_2025/raw_data/DEGs_Data_2.csv"))
+
+str(DEGs_Data_1)
+str(DEGs_Data_2)
+
+
+if (!dir.exists("results")) {
+  dir.create("results")
+}
+
+
+input_files = c("DEGs_Data_1.csv","DEGs_Data_2.csv")
+Result_list =list()
+
+
+df <- read.csv(file, stringsAsFactors = FALSE)
+
+classify_gene <- function(logFC, padj) {
+  if (logFC > 1 & padj < 0.05) {
+    "Upregulated"
+  } else if (logFC < -1 & padj < 0.05) {
+    "Downregulated"
+  } else {
+    "Not_Significant"
+  }
+}
+
+  
+for (files in input_files) {
+  # Load data
+  df <- read.csv(files, stringsAsFactors = FALSE)
+  
+ 
+   # Replace missing padj values with 1
+  df$padj[is.na(df$padj)] <- 1
+  
+  
+  # Add new 'status' column
+  df$status <- mapply(classify_gene, df$logFC, df$padj)
+  
+  df$source_file <- file
+  # Save processed file as CSV
+  output_csv <- file.path("results", paste0("Processed_", file))
+  write.csv(df, output_csv, row.names = FALSE)
+  
+  # Save processed file as RData
+  output_rdata <- file.path("results", paste0("Processed_", tools::file_path_sans_ext(file), ".RData"))
+  save(df, file = output_rdata)
+  
+  # Print summary counts (like table() in R)
+  cat("\nSummary for", file, ":\n")
+  print(table(df$status))
+  
+  Result_list[[file]] <- df
+ 
+}
+
+save(df, file = file.path("results", paste0("Processed_", tools::file_path_sans_ext(file), "NadiaRaafatShehata_class_2_Assignment.RData")))
+
+
